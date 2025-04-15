@@ -338,6 +338,13 @@ def get_all_subformulas(raw_formula):
         raw_formula = CalcMolFormula(Chem.MolFromSmiles(raw_formula))
     
     master_formula = chemparse.parse_formula(raw_formula)
+
+    # Remove the + and - keys
+    keys_to_remove = ['+', '-']
+    for key in keys_to_remove:
+        if key in master_formula:
+            del master_formula[key]
+
     formula_range = [range(int(x) + 1) for (x) in master_formula.values()]
     mass_arr = [Formula(x).isotope.mass for (x) in master_formula.keys()]
     all_possible_candidate_formula_arr = np.array(list(itertools.product(*formula_range)), _numpy_formula_format)
