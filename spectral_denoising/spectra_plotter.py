@@ -81,7 +81,7 @@ def head_to_tail_plot(msms1, msms2,pmz=None,mz_start = None, mz_end = None, pmz2
     if pmz is not None:
         if pmz2 is None:
             pmz2 = pmz
-    print('entropy similarity is', so.entropy_similairty(msms1, msms2, pmz, ms2_error = ms2_error))
+    print('entropy similarity is', so.entropy_similarity(msms1, msms2, pmz, ms2_error = ms2_error))
     if pmz is not None and pmz2 is not None:
         msms1 = so.truncate_spectrum(msms1, pmz-1.6)
         msms2= so.truncate_spectrum(msms2, pmz2-1.6)

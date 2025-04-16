@@ -18,12 +18,13 @@ def read_msp(file_path):
     Returns:
         pd.DataFrame: DataFrame containing the MS/MS spectra information
     """
-    
-    spectra = []
-    spectrum = {}
     if os.path.exists(file_path)== False:
         raise FileNotFoundError(f"File not found: {file_path}")
         return ()
+
+    spectra = []
+    spectrum = {}
+
     with open(file_path, 'r') as f:
         for line in f:
             line = line.strip()
@@ -54,16 +55,16 @@ def read_msp(file_path):
         # Save the last spectrum
         if spectrum:
             spectra.append(spectrum)
+
     df = pd.DataFrame(spectra)
     df['peaks'] = [so.sort_spectrum(so.remove_zero_ions(np.array(peak))) for peak in df['peaks']]
-    for column in df.columns:
-        if column != 'peaks':  # Skip 'peaks' column
-            try:
-                df[column] = pd.to_numeric(df[column], errors='raise')
-            except:
-                pass
+    for col in df.columns:
+        if col != 'peaks':
+            df[col] = pd.to_numeric(df[col], errors='ignore')
     df = standardize_col(df) 
     return df
+
+
 def write_to_msp(df, file_path, msms_col = 'peaks', normalize = False):
     
     """
@@ -189,11 +190,9 @@ def standardize_col(df):
         if col_lower != 'reference_precursor_mz':
             col_lower = col_lower.replace('reference_', '')
         # Map the column name to the standard one if found in the standard mapping
-        standardized_col = standard_mapping.get(col_lower)
-        if standardized_col is not None:
-            new_columns.append(standardized_col)
-        else:
-            new_columns.append(col_lower)
+        standardized_col = standard_mapping.get(col_lower, col_lower)
+        new_columns.append(standardized_col)
+
     # Assign the new standardized columns back to the DataFrame
     df.columns = new_columns
     return df
@@ -233,4 +232,4 @@ def export_denoising_searches(results, save_dir, top_n = 10):
         else:
             temp = results[i].head(top_n)
             pmz_temp = temp.iloc[0]['precursor_mz']
-            write_to_msp(temp, os.path.join(save_dir, f"denoising_search_{i}_{pmz_temp:0.4f}.msp"), msms_col='query_peaks_denoised')
+            write_to_msp(temp, os.path.join(save_dir, f"denoising_search_{i}_{pmz_temp:0.4f}.msp"), msms_col='denoised_peaks')

@@ -4,7 +4,7 @@ from tqdm import tqdm
 import numpy as np
 import multiprocessing as mp
 from .spectral_denoising import spectral_denoising_with_master_formulas, electronic_denoising, prep_formula, has_benzene
-from .spectral_operations import entropy_similairty, sort_spectrum
+from .spectral_operations import entropy_similarity, sort_spectrum
 from .file_io import standardize_col
 import pandas as pd
 pd.options.mode.chained_assignment = None
@@ -72,12 +72,12 @@ def denoising_search(msms, pmz, reference_lib, identitiy_search_mass_error=0.01,
         indecies = [i for i, j in enumerate(unique_formulas) if j == row['master_formula']]
         if len(indecies) > 0 and isinstance(msms_d_all[indecies[0]], float) ==False :
             peaks_denoised = msms_d_all[indecies[0]]
-            pmz_candidates.loc[index, 'entropy_similarity'] = entropy_similairty(msms_raw, row[msms_col], pmz = pmz, )
-            pmz_candidates.loc[index, 'denoised_similarity'] = entropy_similairty(msms_d_all[indecies[0]], row[msms_col], pmz = pmz)
+            pmz_candidates.loc[index, 'entropy_similarity'] = entropy_similarity(msms_raw, row[msms_col], pmz = pmz, )
+            pmz_candidates.loc[index, 'denoised_similarity'] = entropy_similarity(msms_d_all[indecies[0]], row[msms_col], pmz = pmz)
         else:
             peaks_denoised = msms
-            pmz_candidates.loc[index, 'entropy_similarity'] = entropy_similairty(msms_raw, row[msms_col], pmz = pmz)
-            pmz_candidates.loc[index, 'denoised_similarity'] = entropy_similairty(msms, row[msms_col], pmz = pmz)
+            pmz_candidates.loc[index, 'entropy_similarity'] = entropy_similarity(msms_raw, row[msms_col], pmz = pmz)
+            pmz_candidates.loc[index, 'denoised_similarity'] = entropy_similarity(msms, row[msms_col], pmz = pmz)
         peaks_denoised_all.append(peaks_denoised)
     pmz_candidates['query_peaks']=[msms]*len(pmz_candidates)
     pmz_candidates['denoised_peaks'] = peaks_denoised_all

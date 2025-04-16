@@ -28,11 +28,11 @@ peak_denoised = sd.spectral_denoising(peak_with_noise, smiles, adduct)
 # use head_to_tail_plot to visualize the spectra, only in jupyter notebook
 # sd.head_to_tail_plot(peaks_with_noise,peaks ,pmz)
 print(f'the spectrum entropy of contaminated spectrum is {spectral_entropy(peak_with_noise):.2f}, the normalized entropy of contaminated spectrum is {normalized_entropy(peak_with_noise):.2f}')
-print(f'the entropy similarity of contaminated spectrum and the raw spectrum is {entropy_similairty(peak_with_noise,peak,  pmz = pmz):.2f}')
+print(f'the entropy similarity of contaminated spectrum and the raw spectrum is {entropy_similarity(peak_with_noise, peak, pmz = pmz):.2f}')
 
 # perform spectral denosing and compare against the raw spectrum
 peak_denoised = sd.spectral_denoising(peak_with_noise, smiles, adduct)
 # peak_denoised = sd.spectral_denoising(peak_with_noise, formula, adduct) # this two would both work, if you wish to use formula information instead of SMILES information
-print(f'the entropy similarity of denoised spectrum and the raw spectrum is {entropy_similairty(peak_denoised, peak, pmz = pmz):.2f}')
+print(f'the entropy similarity of denoised spectrum and the raw spectrum is {entropy_similarity(peak_denoised, peak, pmz = pmz):.2f}')
 # use head_to_tail_plot to visualize the spectra, only in jupyter notebook
 # sd.head_to_tail_plot(peaks_denoised,peaks ,pmz)

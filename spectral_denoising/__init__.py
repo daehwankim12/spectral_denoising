@@ -3,4 +3,4 @@ from .spectral_denoising import spectral_denoising_batch,spectral_denoising, for
 from .denoising_search import denoising_search, denoising_search_batch
 from .spectra_plotter import head_to_tail_plot
 from .file_io import read_msp, write_to_msp,read_df,save_df,export_denoising_searches
-from .spectral_operations import entropy_similairty
+from .spectral_operations import entropy_similarity
