@@ -13,9 +13,10 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import plotly.express as px
 
-
 import ast
 import textwrap
+
+
 def wrap_labels(ax, width, break_long_words=False):
     labels = []
     for label in ax.get_xticklabels():
@@ -24,25 +25,30 @@ def wrap_labels(ax, width, break_long_words=False):
                                     break_long_words=break_long_words))
     ax.set_xticklabels(labels, rotation=0)
 
+
 def hex_to_RGB(hex_str):
     """ #FFFFFF -> [255,255,255]"""
-    #Pass 16 to the integer function for change of base
-    return [int(hex_str[i:i+2], 16) for i in range(1,6,2)]
+    # Pass 16 to the integer function for change of base
+    return [int(hex_str[i:i + 2], 16) for i in range(1, 6, 2)]
+
+
 def get_color_gradient(c1, c2, n):
     """
     Given two hex colors, returns a color gradient
     with n colors.
     """
     assert n > 1
-    c1_rgb = np.array(hex_to_RGB(c1))/255
-    c2_rgb = np.array(hex_to_RGB(c2))/255
-    mix_pcts = [x/(n-1) for x in range(n)]
-    rgb_colors = [((1-mix)*c1_rgb + (mix*c2_rgb)) for mix in mix_pcts]
-    return ["#" + "".join([format(int(round(val*255)), "02x") for val in item]) for item in rgb_colors]
+    c1_rgb = np.array(hex_to_RGB(c1)) / 255
+    c2_rgb = np.array(hex_to_RGB(c2)) / 255
+    mix_pcts = [x / (n - 1) for x in range(n)]
+    rgb_colors = [((1 - mix) * c1_rgb + (mix * c2_rgb)) for mix in mix_pcts]
+    return ["#" + "".join([format(int(round(val * 255)), "02x") for val in item]) for item in rgb_colors]
+
+
 # reference_db_sorted = pd.read_csv('/Users/fanzhoukong/Documents/GitHub/Libgen_data/formula_db/formulaDB_sorted.csv')
-def head_to_tail_plot(msms1, msms2,pmz=None,mz_start = None, mz_end = None, pmz2= None,ms2_error = 0.02,title = None,
-                      color1 = None, color2 = None,
-                      savepath = None, show= True, publication = False,fontsize = 12):
+def head_to_tail_plot(msms1, msms2, pmz=None, mz_start=None, mz_end=None, pmz2=None, ms2_error=0.02, title=None,
+                      color1=None, color2=None,
+                      savepath=None, show=True, publication=False, fontsize=12):
     """
     Plots a head-to-tail comparison of two MS/MS spectra.
 
@@ -65,13 +71,12 @@ def head_to_tail_plot(msms1, msms2,pmz=None,mz_start = None, mz_end = None, pmz2
     Returns:
         matplotlib.pyplot or None: The plot object if show is True, otherwise None.
     """
-                      
-    
+
     if isinstance(pmz, str):
         pmz = float(pmz)
     if msms1 is float or msms2 is float:
         # return(np.NAN)
-        return(0)
+        return (0)
     if isinstance(msms1, str):
         msms1 = ast.literal_eval(msms1)
     if isinstance(msms2, str):
@@ -81,39 +86,39 @@ def head_to_tail_plot(msms1, msms2,pmz=None,mz_start = None, mz_end = None, pmz2
     if pmz is not None:
         if pmz2 is None:
             pmz2 = pmz
-    print('entropy similarity is', so.entropy_similarity(msms1, msms2, pmz, ms2_error = ms2_error))
+    print('entropy similarity is', so.entropy_similarity(msms1, msms2, pmz, ms2_error=ms2_error))
     if pmz is not None and pmz2 is not None:
-        msms1 = so.truncate_spectrum(msms1, pmz-1.6)
-        msms2= so.truncate_spectrum(msms2, pmz2-1.6)
+        msms1 = so.truncate_spectrum(msms1, pmz - 1.6)
+        msms2 = so.truncate_spectrum(msms2, pmz2 - 1.6)
     mass1, intensity1 = msms1.T[0], msms1.T[1]
-    intensity_nor1 = [x/np.max(intensity1)*100 for x in intensity1]
+    intensity_nor1 = [x / np.max(intensity1) * 100 for x in intensity1]
 
     mass2, intensity2 = msms2.T[0], msms2.T[1]
-    intensity_nor2 = [x/np.max(intensity2)*100 for x in intensity2]
-    intensity_nor2=[-x for x in intensity_nor2]
+    intensity_nor2 = [x / np.max(intensity2) * 100 for x in intensity2]
+    intensity_nor2 = [-x for x in intensity_nor2]
     if publication == True:
         wid = 3
         hi = 2.5
     else:
         wid = 8
         hi = 6
-    fig = plt.figure(figsize = (wid, hi))#43
+    fig = plt.figure(figsize=(wid, hi))  # 43
     plt.subplots_adjust()
     ax = fig.add_subplot()
     for i in range(len(mass1)):
         if color1 == None:
-            plt.vlines(x = mass1[i], ymin = 0, ymax = intensity_nor1[i],color = 'blue')
+            plt.vlines(x=mass1[i], ymin=0, ymax=intensity_nor1[i], color='blue')
         elif color1 != None:
-            plt.vlines(x = mass1[i], ymin = 0, ymax = intensity_nor1[i],color = color1)
+            plt.vlines(x=mass1[i], ymin=0, ymax=intensity_nor1[i], color=color1)
     if pmz != None:
-        plt.vlines(x = pmz, ymin = 0, ymax = 100,color = 'grey', linestyle='dashed')
+        plt.vlines(x=pmz, ymin=0, ymax=100, color='grey', linestyle='dashed')
     for i in range(len(mass2)):
-        if color2 ==None:
-            plt.vlines(x = mass2[i], ymin = 0, ymax = intensity_nor2[i],color = 'r')
+        if color2 == None:
+            plt.vlines(x=mass2[i], ymin=0, ymax=intensity_nor2[i], color='r')
         elif color2 != None:
-            plt.vlines(x = mass2[i], ymin = 0, ymax = intensity_nor2[i],color = color2)
+            plt.vlines(x=mass2[i], ymin=0, ymax=intensity_nor2[i], color=color2)
     if pmz2 != None:
-        plt.vlines(x = pmz2, ymin = -100, ymax = 0,color = 'grey', linestyle='dashed')
+        plt.vlines(x=pmz2, ymin=-100, ymax=0, color='grey', linestyle='dashed')
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
     ax.get_xaxis().tick_bottom()
@@ -121,7 +126,7 @@ def head_to_tail_plot(msms1, msms2,pmz=None,mz_start = None, mz_end = None, pmz2
     ax.set_xlabel(r"$m/z$")
     ax.set_ylabel(r"$Intensity\,[\%]$")
     plt.xticks(rotation='vertical')
-    if(mz_start is not None and mz_end is not None):
+    if (mz_start is not None and mz_end is not None):
         ax.set_xlim(mz_start, mz_end)
 
     ax.set_ylim(-100, +100)
@@ -136,21 +141,14 @@ def head_to_tail_plot(msms1, msms2,pmz=None,mz_start = None, mz_end = None, pmz2
         plt.title(title)
     plt.tight_layout()
     if savepath != None:
-        plt.savefig(savepath, dpi = 300,facecolor = 'white', edgecolor = 'none')
-    if show==True:
-        return(plt)
+        plt.savefig(savepath, dpi=300, facecolor='white', edgecolor='none')
+    if show == True:
+        return (plt)
     else:
-        return()
+        return ()
 
 
-
-
-
-
-
-
-def ms2_plot(msms_1, pmz = None, lower=None, upper=None, savepath = None, color = 'blue'):
-    
+def ms2_plot(msms_1, pmz=None, lower=None, upper=None, savepath=None, color='blue'):
     """
     Plots a single MS/MS spectrum.
     
@@ -166,41 +164,40 @@ def ms2_plot(msms_1, pmz = None, lower=None, upper=None, savepath = None, color 
     """
 
     if pmz is not None:
-        msms_1 = so.truncate_spectrum(msms_1, pmz-1.6)
+        msms_1 = so.truncate_spectrum(msms_1, pmz - 1.6)
     mass1, intensity1 = msms_1.T[0], msms_1.T[1]
 
     if lower is not None:
-        idx_left = np.searchsorted(mass1, lower, side= 'left')
+        idx_left = np.searchsorted(mass1, lower, side='left')
     else:
         idx_left = 0
     if upper is not None:
-        idx_right = np.searchsorted(mass1, upper, side = 'right')
+        idx_right = np.searchsorted(mass1, upper, side='right')
     else:
         idx_right = len(mass1)
     mass1 = mass1[idx_left:idx_right]
     intensity1 = intensity1[idx_left:idx_right]
-    normalized_intensity = [x/np.max(intensity1)*100 for x in intensity1]
+    normalized_intensity = [x / np.max(intensity1) * 100 for x in intensity1]
 
-
-    fig = plt.figure(figsize = (4, 3))
+    fig = plt.figure(figsize=(4, 3))
     plt.subplots_adjust()
     ax = fig.add_subplot()
     for i in range(len(mass1)):
-        plt.vlines(x = mass1[i], ymin = 0, ymax = normalized_intensity[i],color = color, linewidth=2)
+        plt.vlines(x=mass1[i], ymin=0, ymax=normalized_intensity[i], color=color, linewidth=2)
     if pmz != None:
-        plt.vlines(x = pmz, ymin = 0, ymax = 100,color = 'grey', linestyle='dashed')
+        plt.vlines(x=pmz, ymin=0, ymax=100, color='grey', linestyle='dashed')
     # plt.legend()
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
 
     ax.get_xaxis().tick_bottom()
     ax.get_yaxis().tick_left()
-    ax.set_xlabel(r"$m/z$", fontsize = 12)
-    ax.set_ylabel(r"$Intensity\,[\%]$", fontsize = 12)
+    ax.set_xlabel(r"$m/z$", fontsize=12)
+    ax.set_ylabel(r"$Intensity\,[\%]$", fontsize=12)
     plt.xticks(rotation='vertical')
     start, end = ax.get_xlim()
     # start, end = ax.get_xlim(), 
-    if(lower!=None and upper!= None):
+    if (lower != None and upper != None):
         ax.set_xlim(lower, upper)
     ax.set_ylim(0, 100)
     plt.axhline(y=0, color='black', linestyle='-')
@@ -218,9 +215,9 @@ def ms2_plot(msms_1, pmz = None, lower=None, upper=None, savepath = None, color 
     # fig.set(xlabel = None)
     if savepath != None:
         fig.tight_layout()
-        plt.savefig(savepath, dpi = 300,facecolor = 'white', edgecolor = 'white')
+        plt.savefig(savepath, dpi=300, facecolor='white', edgecolor='white')
 
-    return(plt)
+    return (plt)
 # def ms2_overlay(msms_1=None,msms_2=None,msms_3 = None, pmz = None, savepath = None):
 #     fig = plt.figure(figsize = (8, 6))
 #     plt.subplots_adjust()
@@ -275,8 +272,6 @@ def ms2_plot(msms_1, pmz = None, lower=None, upper=None, savepath = None, color 
 #         plt.savefig(savepath, dpi = 300,facecolor = 'white', edgecolor = 'white')
 
 #     return(plt)
-
-
 
 
 # def ms2_clean_noise(msms_1, msms_2, pmz1 = None, lower=None, upper=None, savepath = None, hline= None):
@@ -338,5 +333,3 @@ def ms2_plot(msms_1, pmz = None, lower=None, upper=None, savepath = None, color 
 
 #     return(plt)
 # In[17]:
-
-

@@ -1,4 +1,4 @@
-import numpy as np 
+import numpy as np
 from rdkit import Chem
 import re
 import cirpy
@@ -7,6 +7,8 @@ from rdkit.Chem.rdMolDescriptors import CalcMolFormula
 from rdkit.Chem.Descriptors import ExactMolWt
 from pubchempy import Compound, get_compounds
 from molmass import Formula
+
+
 def get_classyfire(smiles, if_np=False):
     """
     Retrieves the ClassyFire classification for a given SMILES string.
@@ -25,6 +27,8 @@ def get_classyfire(smiles, if_np=False):
         return r.json()
     else:
         return np.nan
+
+
 def everything_to_smiles(input):
     """
     Convert various chemical identifier formats to a SMILES string.
@@ -37,7 +41,7 @@ def everything_to_smiles(input):
         smiles (str): The corresponding SMILES string if the conversion is successful. Returns NaN if the input is NaN.
     """
 
-    if input != input:# check for nan
+    if input != input:  # check for nan
         return np.nan
     if is_smiles(input):
         smiles = input
@@ -52,8 +56,10 @@ def everything_to_smiles(input):
             smiles = name_to_smiles(input)
     else:
         smiles = name_to_smiles(input)
-    return(smiles)
-def everything_to_inchikey(input, first_block = True):
+    return (smiles)
+
+
+def everything_to_inchikey(input, first_block=True):
     """
     Converts various chemical identifiers to an InChIKey or its first block.
     This function takes an input which can be an InChIKey, a molecule object, a SMILES string, 
@@ -70,10 +76,10 @@ def everything_to_inchikey(input, first_block = True):
     """
 
     smiles = np.nan
-    if input != input:# check for nan
+    if input != input:  # check for nan
         return np.nan
     if is_inchikey(input):
-        if first_block ==True:
+        if first_block == True:
             return input[0:14]
         else:
             return input
@@ -90,11 +96,13 @@ def everything_to_inchikey(input, first_block = True):
     if smiles == smiles:
         mol = Chem.MolFromSmiles(smiles)
         inchikey = Chem.MolToInchiKey(mol)
-        if first_block ==True:
+        if first_block == True:
             return inchikey[0:14]
         return inchikey
     else:
         return np.nan
+
+
 def everything_to_formula(input):
     """
     Converts various chemical input to a molecular formula.
@@ -121,16 +129,17 @@ def everything_to_formula(input):
     mol = Chem.MolFromSmiles(smiles)
     formula = CalcMolFormula(mol)
     # formula = standarize_formula(formula_temp)
-    return(formula)
+    return (formula)
 
-def create_classyfire_url(smiles_string, if_np = True):
+
+def create_classyfire_url(smiles_string, if_np=True):
     """
     Generates a URL for ClassyFire or NPClassifier based on the provided SMILES string. Just a helper function
     """
     if if_np:
         url_template = "https://npclassifier.gnps2.org/classify?smiles={}"
     else:
-        url_template='https://structure.gnps2.org/classyfire?smiles={}'
+        url_template = 'https://structure.gnps2.org/classyfire?smiles={}'
     return url_template.format(smiles_string)
 
 
@@ -147,7 +156,9 @@ def smiles_to_inchikey(smiles):
         return np.nan
     mol = Chem.MolFromSmiles(smiles)
     inchikey = Chem.MolToInchiKey(mol)
-    return(inchikey[0:14])
+    return (inchikey[0:14])
+
+
 def inchikey_to_smiles(inchikey):
     """
     helper function, but uses pubchem database
@@ -158,14 +169,16 @@ def inchikey_to_smiles(inchikey):
         str: The fetched isomeric SMILES code.
     """
     cc = get_compounds(inchikey, 'inchikey')
-    if len(cc)>0:
+    if len(cc) > 0:
         return (cc[0].isomeric_smiles)
     else:
         cc = get_compounds(inchikey[0:14], 'inchikey')
-        if len(cc)>0:
+        if len(cc) > 0:
             return (cc[0].isomeric_smiles)
         else:
             return (np.nan)
+
+
 def cas_to_smiles(cas):
     """
     Convert a CAS (Chemical Abstracts Service) number to a SMILES (Simplified Molecular Input Line Entry System) string.
@@ -179,7 +192,9 @@ def cas_to_smiles(cas):
     smile = cirpy.resolve(cas, 'smiles')
     if smile is None:
         smile = np.nan
-    return(smile)
+    return (smile)
+
+
 def name_to_smiles(name):
     """
     Convert a chemical name to its corresponding SMILES (Simplified Molecular Input Line Entry System) representation, with Pubchem as backend.
@@ -191,10 +206,11 @@ def name_to_smiles(name):
     """
 
     cc = get_compounds(name, 'name')
-    if len(cc)>0:
+    if len(cc) > 0:
         return (cc[0].isomeric_smiles)
     else:
         return (np.nan)
+
 
 def everything_to_image(molecule, savepath):
     """
@@ -211,7 +227,7 @@ def everything_to_image(molecule, savepath):
     from rdkit import Chem
     from rdkit.Chem import Draw
     if is_mol(molecule):
-    # Create an RDKit molecule object
+        # Create an RDKit molecule object
         mol = molecule
 
     elif is_smiles(molecule):
@@ -222,9 +238,11 @@ def everything_to_image(molecule, savepath):
         mol = Chem.MolFromSmiles(smiles)
     # Generate the image of the molecule
     img = Draw.MolToImage(mol)
-        # Save the image to a file
+    # Save the image to a file
     img.save(savepath)
-#below are is_ section
+
+
+# below are is_ section
 def is_inchikey(string):
     """
     Check if a given string is a valid InChIKey using regex.
@@ -247,6 +265,7 @@ def is_inchikey(string):
     else:
         return False
 
+
 def is_mol(mol):
     """
     Check if the given object is an instance of Chem.rdchem.Mol.
@@ -258,6 +277,8 @@ def is_mol(mol):
     """
 
     return isinstance(mol, Chem.rdchem.Mol)
+
+
 def is_smiles(smiles_string):
     """
     Check if a given string is a valid SMILES (Simplified Molecular Input Line Entry System) representation.
@@ -281,6 +302,8 @@ def is_smiles(smiles_string):
     else:
         # If the molecule object is None, the SMILES string is invalid
         return False
+
+
 def is_cas_number(string):
     """
     Check if a given string is a valid CAS (Chemical Abstracts Service) number.
@@ -304,6 +327,8 @@ def is_cas_number(string):
         return True
     else:
         return False
+
+
 def everything_to_mw(mol):
     """
     Converts a given molecule representation to its molecular weight (MW).
@@ -316,13 +341,15 @@ def everything_to_mw(mol):
     Raises:
         ValueError: If the input cannot be converted to a valid molecule object.
     """
-    
-    if is_mol(mol)==False:
+
+    if is_mol(mol) == False:
         smiles = everything_to_smiles(mol)
-        
+
         mol = Chem.MolFromSmiles(smiles)
         return mol
-    return(ExactMolWt(mol))
+    return (ExactMolWt(mol))
+
+
 def is_formula(s):
     """
     Check if a given string is a valid chemical formula.

@@ -1,7 +1,9 @@
 import random
 import numpy as np
 from . import spectral_operations as so
-def generate_noise(pmz, lamda, n = 100):
+
+
+def generate_noise(pmz, lamda, n=100):
     """
     Generate synthetic electronic noise for spectral data.
     
@@ -15,7 +17,7 @@ def generate_noise(pmz, lamda, n = 100):
         np.array: A synthetic spectrum with electronic noise.
     """
 
-    if int(n)!= n:
+    if int(n) != n:
         n = np.int64(np.ceil(n))
     else:
         n = n
@@ -26,8 +28,10 @@ def generate_noise(pmz, lamda, n = 100):
 
     # Generating Poisson-distributed random variables
     intensity = np.random.poisson(lam=lamda, size=n)
-    intensity = intensity/100
-    return(so.pack_spectrum(mass, intensity))
+    intensity = intensity / 100
+    return (so.pack_spectrum(mass, intensity))
+
+
 def add_noise(msms, noise):
     """
     Add noise to a mass spectrum and process the resulting spectrum.
@@ -50,9 +54,10 @@ def add_noise(msms, noise):
 
     msms = so.standardize_spectrum(msms)
     msms_c = so.add_spectra(msms, noise)
-    return(so.sort_spectrum(so.normalize_spectrum(msms_c)) )
-def generate_chemical_noise(pmz, lamda, polarity,formula_db,n = 100):
-    
+    return (so.sort_spectrum(so.normalize_spectrum(msms_c)))
+
+
+def generate_chemical_noise(pmz, lamda, polarity, formula_db, n=100):
     """
     Generate chemical noise for a given mass-to-charge ratio (m/z) and other parameters.
     The m/z of the chemical noise is taken from a database of all true possible mass values. 
@@ -76,31 +81,31 @@ def generate_chemical_noise(pmz, lamda, polarity,formula_db,n = 100):
         ValueError: If the polarity is not '+' or '-'.
     """
 
-    mass_e =  -0.00054858026
-    if polarity =='+':
+    mass_e = -0.00054858026
+    if polarity == '+':
         coe = 1
-    elif polarity =='-':
+    elif polarity == '-':
         coe = -1
     else:
         print('cannot determine adduct polarity!')
-        return()
-    if int(n)!= n:
+        return ()
+    if int(n) != n:
         n = np.int64(np.ceil(n))
     else:
         n = n
     all_possible_mass = np.array(formula_db['mass'])
-    idx_left, idx_right = all_possible_mass.searchsorted([50,pmz ])
+    idx_left, idx_right = all_possible_mass.searchsorted([50, pmz])
     all_allowed_mass = all_possible_mass[idx_left:idx_right]
-    if idx_right-idx_left <n:
-        n = idx_right-idx_left
+    if idx_right - idx_left < n:
+        n = idx_right - idx_left
     # Generate a random variable from a uniform distribution in the range [a, b]
     mass = np.random.choice(all_allowed_mass, size=n, replace=False)
-    mass = mass+coe*mass_e
+    mass = mass + coe * mass_e
     # mass = [random.uniform(50, pmz) for _ in range(n)]
 
     # size specifies the number of random variates to generate.
 
     # Generating Poisson-distributed random variables
     intensity = np.random.poisson(lam=lamda, size=n)
-    intensity = intensity/100
-    return(so.pack_spectrum(mass, intensity))
+    intensity = intensity / 100
+    return (so.pack_spectrum(mass, intensity))

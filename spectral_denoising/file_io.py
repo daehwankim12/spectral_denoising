@@ -1,4 +1,4 @@
-import pandas as pd 
+import pandas as pd
 import re
 import os
 from . import spectral_operations as so
@@ -8,8 +8,9 @@ import numpy as np
 from tqdm import tqdm
 from fuzzywuzzy import fuzz
 import json
+
+
 def read_msp(file_path):
-    
     """
     Reads the MSP files into the pandas dataframe, and sort/remove zero intensity ions in MS/MS spectra.
 
@@ -18,55 +19,62 @@ def read_msp(file_path):
     Returns:
         pd.DataFrame: DataFrame containing the MS/MS spectra information
     """
-    if os.path.exists(file_path)== False:
+    if not os.path.exists(file_path):
         raise FileNotFoundError(f"File not found: {file_path}")
-        return ()
 
     spectra = []
     spectrum = {}
+    peaks_list = []
 
     with open(file_path, 'r') as f:
         for line in f:
             line = line.strip()
             if not line:
-                continue  # Skip empty lines
-            
-            # Handle metadata
+                continue
+
             if ":" in line:
                 key, value = line.split(":", 1)
                 key = key.strip().lower()
                 value = value.strip()
-                
+
                 if key == 'name':
-                    # Save current spectrum and start a new one
                     if spectrum:
+                        spectrum['peaks'] = np.array(peaks_list, dtype=np.float64) if peaks_list else np.empty(
+                            (0, 2), dtype=np.float64)
                         spectra.append(spectrum)
-                    spectrum = {'name': value, 'peaks': []}
+
+                    spectrum = {'name': value}
+                    peaks_list = []
                 else:
                     spectrum[key] = value
-            
-            # Handle peak data (assumed to start with a number)
-            elif line[0].isdigit():
-                
-                peaks = line.split()
-                m_z = float(peaks[0])
-                intensity = float(peaks[1])
-                spectrum['peaks'].append((([m_z, intensity])))
-        # Save the last spectrum
+
+            elif line and (line[0].isdigit() or line[0] == '.' or line[0] == '-'):
+                parts = line.split()
+                if len(parts) >= 2:
+                    m_z = float(parts[0])
+                    intensity = float(parts[1])
+                    peaks_list.append((m_z, intensity))
+
         if spectrum:
+            spectrum['peaks'] = np.array(peaks_list, dtype=np.float64) if peaks_list else np.empty((0, 2),
+                                                                                                   dtype=np.float64)
             spectra.append(spectrum)
 
     df = pd.DataFrame(spectra)
-    df['peaks'] = [so.sort_spectrum(so.remove_zero_ions(np.array(peak))) for peak in df['peaks']]
+
+    df['peaks'] = df['peaks'].apply(so.remove_zero_ions)
+    df['peaks'] = df['peaks'].apply(so.sort_spectrum)
+
     for col in df.columns:
         if col != 'peaks':
             df[col] = pd.to_numeric(df[col], errors='ignore')
-    df = standardize_col(df) 
+
+    df = standardize_col(df)
+
     return df
 
 
-def write_to_msp(df, file_path, msms_col = 'peaks', normalize = False):
-    
+def write_to_msp(df, file_path, msms_col='peaks', normalize=False):
     """
     Pair function of read_msp.
     Exports a pandas DataFrame to an MSP file.
@@ -86,19 +94,21 @@ def write_to_msp(df, file_path, msms_col = 'peaks', normalize = False):
                 continue
             if 'name' in df.columns:
                 f.write(f"Name: {row['name']}\n")
-            
+
             # Write other metadata if available
             for col in df.columns:
                 if col not in ['name', msms_col] and 'peak' not in col:
                     f.write(f"{col.capitalize()}: {row[col]}\n")
-            
+
             # Write the peaks (assuming each peak is a tuple of (m/z, intensity))
             f.write(f"Num Peaks: {len(row[msms_col])}\n")
             for mz, intensity in row[msms_col]:
                 f.write(f"{mz} {intensity}\n")
-            
+
             # Separate spectra by an empty line
             f.write("\n")
+
+
 def save_df(df, save_path):
     """
     Pair function of save_df.
@@ -120,18 +130,20 @@ def save_df(df, save_path):
     cols = []
     for c in df.columns:
         if isinstance(df.iloc[0][c], np.ndarray):
-            if np.shape(df.iloc[0][c])[1]==2:
+            if np.shape(df.iloc[0][c])[1] == 2:
                 cols.append(c)
     print(cols)
     if save_path.endswith('.csv') == False:
-        save_path = save_path+'.csv'
+        save_path = save_path + '.csv'
     for col in cols:
         specs = []
-        for index, row in tqdm(data.iterrows(), total = len(data)):
+        for index, row in tqdm(data.iterrows(), total=len(data)):
             specs.append(so.arr_to_str(row[col]))
-        data[col]=specs
-    data.to_csv(save_path, index = False)
-def read_df(path, keep_ms1_only = False):
+        data[col] = specs
+    data.to_csv(save_path, index=False)
+
+
+def read_df(path, keep_ms1_only=False):
     """
     Pair function of write_df.
     Reads a CSV file into a DataFrame, processes specific columns based on a pattern check, 
@@ -151,23 +163,24 @@ def read_df(path, keep_ms1_only = False):
         - The `so.str_to_arr` function is used to convert the values in the selected columns.
     """
     df = pd.read_csv(path)
-    
+
     print('done read in df...')
     for col in df.columns:
         if check_pattern(df[col].iloc[0]):
-            df[col] = [so.str_to_arr(y[col]) for x,y in df.iterrows()]
-    df =  standardize_col(df)
-
-
+            df[col] = [so.str_to_arr(y[col]) for x, y in df.iterrows()]
+    df = standardize_col(df)
 
     if keep_ms1_only == False:
         df.dropna(subset=['peaks'], inplace=True)
     if ':' in df.iloc[0]['peaks']:
-        df['peaks']=[so.msdial_to_array(row['peaks']) for index, row in df.iterrows() if row['peaks'] == row['peaks']]
+        df['peaks'] = [so.msdial_to_array(row['peaks']) for index, row in df.iterrows() if row['peaks'] == row['peaks']]
     df.reset_index(drop=True, inplace=True)
-    return(df)
+    return (df)
+
 
 from .constant import standard_mapping
+
+
 def standardize_col(df):
     """
     Standardizes column names in the given DataFrame based on a provided mapping. Help to read in and processing files with MS Dial generated msp files.
@@ -181,7 +194,7 @@ def standardize_col(df):
     Returns:
     pd.DataFrame: DataFrame with standardized column names.
     """
-    
+
     # Create a mapping for case-insensitive column names
     new_columns = []
     for col in df.columns:
@@ -197,6 +210,7 @@ def standardize_col(df):
     df.columns = new_columns
     return df
 
+
 def check_pattern(input_string):
     """
     Helper function for read_df.
@@ -207,12 +221,14 @@ def check_pattern(input_string):
     Returns:
         bool: True if the pattern is found, False otherwise
     """
-    
+
     if isinstance(input_string, str):
         if '\t' in input_string:
             return True
     return False
-def export_denoising_searches(results, save_dir, top_n = 10):
+
+
+def export_denoising_searches(results, save_dir, top_n=10):
     """
     Pair function of import_denoising_searches.
     Exports the results of a denoising search to a JSON file.
@@ -227,9 +243,10 @@ def export_denoising_searches(results, save_dir, top_n = 10):
         os.makedirs(save_dir)
 
     for i in range(len(results)):
-        if results[i].empty or len(results[i])==0:
+        if results[i].empty or len(results[i]) == 0:
             continue
         else:
             temp = results[i].head(top_n)
             pmz_temp = temp.iloc[0]['precursor_mz']
-            write_to_msp(temp, os.path.join(save_dir, f"denoising_search_{i}_{pmz_temp:0.4f}.msp"), msms_col='denoised_peaks')
+            write_to_msp(temp, os.path.join(save_dir, f"denoising_search_{i}_{pmz_temp:0.4f}.msp"),
+                         msms_col='denoised_peaks')

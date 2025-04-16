@@ -1,5 +1,3 @@
-
-
 from rdkit import Chem
 import re
 import chemparse
@@ -21,6 +19,7 @@ import requests
 
 from .identifier_utils import *
 
+
 def get_bond_similarity(mol1, mol2):
     """
     Calculate the bond similarity between two molecules.
@@ -39,11 +38,11 @@ def get_bond_similarity(mol1, mol2):
               (2 * common_bond_number) / (mol1_bond_number + mol2_bond_number).
             - "minimal_diff": The minimal difference in bond numbers after removing common bonds.
     """
-    
-    if is_mol(mol1)==False:
+
+    if is_mol(mol1) == False:
         smile1 = everything_to_smiles(mol1)
         mol1 = Chem.MolFromSmiles(smile1)
-    if is_mol(mol2)==False:
+    if is_mol(mol2) == False:
         smile2 = everything_to_smiles(mol2)
         mol2 = Chem.MolFromSmiles(smile2)
     mol1 = Chem.rdchem.RWMol(mol1)
@@ -72,15 +71,16 @@ def get_bond_similarity(mol1, mol2):
         mol2, _ = __remove_bonds_in_smarts(mol2, common_s)
         bond_number_common += res.numBonds
         # print(bond_number_common)
-        minimal_diff = np.min([bond_number_mol1-bond_number_common, bond_number_mol2-bond_number_common])
+        minimal_diff = np.min([bond_number_mol1 - bond_number_common, bond_number_mol2 - bond_number_common])
     return {
         "mol1_bond_number": bond_number_mol1,
         "mol2_bond_number": bond_number_mol2,
         "common_bond_number": bond_number_common,
         "bond_difference": (bond_number_mol1 + bond_number_mol2) / 2 - bond_number_common,
         "bond_similarity": (2 * bond_number_common) / (bond_number_mol1 + bond_number_mol2),
-        'minimal_diff':minimal_diff
+        'minimal_diff': minimal_diff
     }
+
 
 def __remove_bonds_in_smarts(mol, smarts):
     """
@@ -112,8 +112,8 @@ def __remove_bonds_in_smarts(mol, smarts):
                 removed_bond_number += 1
     return mol, removed_bond_number
 
-def desalter(input):
 
+def desalter(input):
     """
     Processes the input molecule to remove salts and return an uncharged SMILES string.
 
@@ -137,8 +137,8 @@ def desalter(input):
         mol = input
     components = Chem.GetMolFrags(mol, asMols=True, sanitizeFrags=False)
 
-    if len(components)==1:
-        if Chem.GetFormalCharge(components[0])==1:
+    if len(components) == 1:
+        if Chem.GetFormalCharge(components[0]) == 1:
             uncharged_smiles = __remove_acidic_hydrogen(components[0])
         else:
             uncharged_smiles = Chem.MolToSmiles(components[0])
@@ -147,20 +147,22 @@ def desalter(input):
         n_atoms = np.zeros(len(components))
         counter = 0
         for component in components:
-            n_atoms[counter]=component.GetNumAtoms()
-            counter = counter+1
+            n_atoms[counter] = component.GetNumAtoms()
+            counter = counter + 1
         idx = np.argmax(n_atoms)
         # print(idx)
         charged = components[np.argmax(n_atoms)]
         un = rdMolStandardize.Uncharger()
         uncharged = un.uncharge(charged)
         # return(uncharged)
-        if Chem.GetFormalCharge(uncharged)==1:
+        if Chem.GetFormalCharge(uncharged) == 1:
             uncharged_smiles = __remove_acidic_hydrogen(uncharged)
         else:
             uncharged_smiles = Chem.MolToSmiles(uncharged)
 
-        return( uncharged_smiles)
+        return (uncharged_smiles)
+
+
 def __remove_acidic_hydrogen(mol):
     """
     Helper function of desalter
@@ -176,7 +178,7 @@ def __remove_acidic_hydrogen(mol):
         the original SMILES string is returned.
     """
     # Convert the SMILES string to a RDKit molecule object
-    if is_mol(mol)==False:
+    if is_mol(mol) == False:
         smiles = everything_to_smiles(mol)
         molecule = Chem.MolFromSmiles(smiles)
     else:
@@ -215,8 +217,9 @@ def __remove_acidic_hydrogen(mol):
     modified_smiles = Chem.MolToSmiles(modified_mol)
 
     return modified_smiles
-def parse_formula(formula):
 
+
+def parse_formula(formula):
     """
     Parses a chemical formula into its constituent elements and their quantities.
 
@@ -228,11 +231,11 @@ def parse_formula(formula):
     """
 
     dict = chemparse.parse_formula(formula)
-    lst = ([[x,y] for x, y in zip([*dict],[*dict.values()]) ])
-    return(lst)
+    lst = ([[x, y] for x, y in zip([*dict], [*dict.values()])])
+    return (lst)
+
 
 def transpose_formula(lst):
-
     """
     Transpose a parsed formula in a nested list format from [[element, quantity], ...] to [[element, ...], [quantity, ...]].
 
@@ -241,10 +244,11 @@ def transpose_formula(lst):
     Returns:
         list: A transposed version of the input list of lists, where rows are converted to columns and vice versa.
     """
-    
-    return([list(x) for x in zip(*lst)])
-def calculate_precursormz(adduct_string,mol = None, testing = False):
-    
+
+    return ([list(x) for x in zip(*lst)])
+
+
+def calculate_precursormz(adduct_string, mol=None, testing=False):
     """
     Calculate the precursor m/z (mass-to-charge ratio) for a given molecule and adduct string.
     Very robust function, handles a wide variety of adducts strings.
@@ -263,11 +267,11 @@ def calculate_precursormz(adduct_string,mol = None, testing = False):
         - The `replace_adduct_string`, `determine_parent_coefs`, `determine_adduct_charge`, and `parse_adduct` functions are assumed to be defined elsewhere in the codebase.
         - The electron mass is considered in the calculation to adjust for the loss/gain of electrons.
     """
-    
+
     if testing == True:
         molecule_mass = 853.33089
     else:
-        
+
         molecule_mass = Formula(everything_to_formula(mol)).isotope.mass
 
     adduct_string = adduct_string.strip()
@@ -280,8 +284,6 @@ def calculate_precursormz(adduct_string,mol = None, testing = False):
     if m_coef != m_coef or charge != charge:
         return np.nan
     # Check for charge in the adduct string
-    
-        
 
     # Find all matches of adduct parts
     adduct = parse_adduct(adduct_string)
@@ -297,13 +299,15 @@ def calculate_precursormz(adduct_string,mol = None, testing = False):
             continue
         mass_change += sign_multiplier * count * ion_mass
         # Calculate the mass change if ion_type is recognized
-    mass_change = mass_change-charge*electron_mass
+    mass_change = mass_change - charge * electron_mass
     # print(mass_change)
 
     # Calculate the precursor m/z, considering the charge state, adjust for loss/gain of electrons
-    precursor_mz = molecule_mass*m_coef+mass_change
-    precursor_mz = precursor_mz/ abs(charge)
+    precursor_mz = molecule_mass * m_coef + mass_change
+    precursor_mz = precursor_mz / abs(charge)
     return precursor_mz
+
+
 def determine_parent_coefs(adduct_string):
     """
     Determine the coefficient of of the adducts by ignoring the parent ion M.
@@ -324,6 +328,8 @@ def determine_parent_coefs(adduct_string):
     else:
         # print(f'the correct adduct form cannot be determined from {adduct_string}')
         return np.nan
+
+
 def determine_adduct_charge(adduct_string):
     """
     Determine the charge of an adduct based on its string representation.
@@ -347,12 +353,12 @@ def determine_adduct_charge(adduct_string):
 
     adduct_string = replace_adduct_string(adduct_string)
     if adduct_string.endswith('+'):
-        if adduct_string[-2].isdigit() and adduct_string[-3] == ']': # Check if the charge is in brackets
+        if adduct_string[-2].isdigit() and adduct_string[-3] == ']':  # Check if the charge is in brackets
             charge = int(adduct_string[-2])
         else:
             charge = 1
     elif adduct_string.endswith('-'):
-        if adduct_string[-2].isdigit() and adduct_string[-3] == ']': # Check if the charge is in brackets:
+        if adduct_string[-2].isdigit() and adduct_string[-3] == ']':  # Check if the charge is in brackets:
             charge = -int(adduct_string[-2])
         else:
             charge = -1
@@ -360,6 +366,8 @@ def determine_adduct_charge(adduct_string):
         charge = np.nan
         # print(f'the correct adduct form cannot be determined from {adduct_string}')
     return charge
+
+
 def parse_adduct(adduct_string):
     """
     Parses an adduct string into its components.
@@ -378,16 +386,18 @@ def parse_adduct(adduct_string):
     # Regular expression to capture multiple parts of the adduct and the charge
     pattern = r'([+-])(\d*)([A-Za-z0-9]+)'
     matches = re.findall(pattern, adduct_string)
-    matches=map(list, matches)
+    matches = map(list, matches)
     parsed_adduct = []
     for match in matches:
-            sign, count, ion_type = match
-            
-            # If no count is given, assume it's 1
-            count = int(count) if count else 1
-            parsed_adduct.append([sign, count, ion_type])
-            # Determine the sign (+ or -)
+        sign, count, ion_type = match
+
+        # If no count is given, assume it's 1
+        count = int(count) if count else 1
+        parsed_adduct.append([sign, count, ion_type])
+        # Determine the sign (+ or -)
     return parsed_adduct
+
+
 def replace_adduct_string(adduct_string):
     """
     Replaces specific adduct strings with their standardized or chemical formula equivalents.
@@ -399,9 +409,9 @@ def replace_adduct_string(adduct_string):
     Returns:
         adduct_string (str): The replaced adduct string.
     """
-    adduct_string=adduct_string.replace('Cat', 'M')
-    adduct_string=adduct_string.replace('CAT', 'M')
-    if adduct_string in ['Cat', 'CAT','[M+]', 'M+','[Cat]+']:
+    adduct_string = adduct_string.replace('Cat', 'M')
+    adduct_string = adduct_string.replace('CAT', 'M')
+    if adduct_string in ['Cat', 'CAT', '[M+]', 'M+', '[Cat]+']:
         adduct_string = '[M]+'
     if adduct_string in ['[M]-', 'M-']:
         adduct_string = '[M]-'
@@ -413,4 +423,4 @@ def replace_adduct_string(adduct_string):
         adduct_string = adduct_string.replace("DMSO", "C2H6OS")
     if 'ACN' in adduct_string:
         adduct_string = adduct_string.replace("ACN", "C2H3N")
-    return(adduct_string)
+    return (adduct_string)

@@ -2,7 +2,8 @@ import pandas as pd
 import numpy as np
 import numexpr
 
-def string_search(data, column_name,item, reset_index = True,reverse = False):
+
+def string_search(data, column_name, item, reset_index=True, reverse=False):
     def string_search(data, column_name, item, reset_index=True, reverse=False):
         """
         Searches for rows in a DataFrame where the specified column matches (or does not match) a given item.
@@ -18,14 +19,16 @@ def string_search(data, column_name,item, reset_index = True,reverse = False):
         """
 
     if reverse == False:
-        _data= data[data[column_name].to_numpy() == item]
+        _data = data[data[column_name].to_numpy() == item]
     else:
-        _data= data[data[column_name].to_numpy() != item]
+        _data = data[data[column_name].to_numpy() != item]
     if reset_index == True:
-        _data.reset_index(inplace= True, drop = True)
-    return(_data)
-        # return data[data[column_name].to_numpy() != item]
-def quick_search_sorted(data_raw, column_name,value_start, value_end):
+        _data.reset_index(inplace=True, drop=True)
+    return (_data)
+    # return data[data[column_name].to_numpy() != item]
+
+
+def quick_search_sorted(data_raw, column_name, value_start, value_end):
     """
     Perform a quick search on a sorted column of a DataFrame to find rows within a specified range.
 
@@ -38,12 +41,14 @@ def quick_search_sorted(data_raw, column_name,value_start, value_end):
         pd.DataFrame: A DataFrame containing the rows where the values in the specified column fall within the given range.
     """
 
-    search_array=data_raw[column_name].to_numpy(dtype="float")
-    index_start = np.searchsorted(search_array, value_start,side = 'left')
-    index_end = np.searchsorted(search_array, value_end,side = 'right')
+    search_array = data_raw[column_name].to_numpy(dtype="float")
+    index_start = np.searchsorted(search_array, value_start, side='left')
+    index_end = np.searchsorted(search_array, value_end, side='right')
     # drop_indices = list(range(index_start)) + list(range(index_end, len(data_raw)))
-    
+
     return data_raw.iloc[index_start:index_end]
+
+
 # def quick_search_sorted(data_raw, column_name,value_start, value_end):
 #     """
 #     Perform a quick search on a sorted column of a DataFrame to find rows within a specified range.
@@ -61,7 +66,7 @@ def quick_search_sorted(data_raw, column_name,value_start, value_end):
 #     index_start = np.searchsorted(search_array, value_start,side = 'left')
 #     index_end = np.searchsorted(search_array, value_end,side = 'right')
 #     return(data_raw.iloc[index_start:index_end])
-def quick_search_values(data_raw, column_name,value_start, value_end):
+def quick_search_values(data_raw, column_name, value_start, value_end):
     """
     Perform a quick search on a DataFrame to find rows where the values in a specified column fall within a given range. Basically sorting the data first
     followed by quick_search_sorted.
@@ -79,7 +84,7 @@ def quick_search_values(data_raw, column_name,value_start, value_end):
     data_return = quick_search_sorted(data_sorted, column_name, value_start, value_end)
     # index_start = np.searchsorted(data[column_name], value_start,side = 'left')
     # index_end = np.searchsorted(data[column_name], value_end,side = 'right')
-    return(data_return)
+    return (data_return)
 
 # def num_search(data, column_name,number, direction, step = None,inclusion = False):
 #     """
@@ -126,6 +131,3 @@ def quick_search_values(data_raw, column_name,value_start, value_end):
 #             return (temp[numexpr.evaluate('(x <= number+step)')])
 #     else:
 #         print('the wrong method is passed')
-
-
-
